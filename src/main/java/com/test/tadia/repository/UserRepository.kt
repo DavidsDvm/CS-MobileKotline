@@ -44,13 +44,13 @@ class UserRepository(private val database: AppDatabase) {
             try {
                 val user = userDao.getUserByEmail(email.trim().lowercase())
                 if (user == null) {
-                    return@withContext Result.failure(Exception("User not found"))
+                    return@withContext Result.failure(Exception("Usuario Invalido"))
                 }
 
                 if (PasswordUtils.verifyPassword(password, user.passwordHash)) {
                     Result.success(user)
                 } else {
-                    Result.failure(Exception("Invalid password"))
+                    Result.failure(Exception("Contraseña invalida"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

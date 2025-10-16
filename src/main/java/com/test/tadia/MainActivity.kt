@@ -45,6 +45,7 @@ fun TadIAApp() {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var selectedReservation by remember { mutableStateOf<Reservation?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var isUpdatingReservation by remember { mutableStateOf(false) }
     
     val application = LocalContext.current.applicationContext as TadIAApplication
     val userRepository = application.userRepository
@@ -54,14 +55,15 @@ fun TadIAApp() {
     // Collect UI state at the top level
     val reservationUiState by reservationViewModel.uiState.collectAsState()
     
-    // Watch for successful reservation creation (no error and not loading)
-    LaunchedEffect(reservationUiState.errorMessage, reservationUiState.isLoading) {
-        if (currentScreen == "reservation_form" && 
-            reservationUiState.errorMessage == null && 
-            !reservationUiState.isLoading &&
-            selectedReservation == null) {
-            // Successful creation - navigate back to calendar
+    // Watch for successful reservation operations
+    LaunchedEffect(reservationUiState.operationSuccessful, currentScreen) {
+        if (currentScreen == "reservation_form" && reservationUiState.operationSuccessful) {
+            println("DEBUG: Operation successful, navigating back to calendar")
+            // Clear the success flag
+            reservationViewModel.clearSuccessFlag()
+            // Navigate back to calendar
             selectedReservation = null
+            isUpdatingReservation = false
             currentScreen = "calendar"
         }
     }
@@ -236,13 +238,14 @@ fun TadIAApp() {
                             // Don't navigate immediately - wait for validation result
                         } else {
                             // Updating existing reservation
+                            isUpdatingReservation = true
                             reservationViewModel.updateReservation(reservation)
-                            selectedReservation = null
-                            currentScreen = "calendar"
+                            // Navigation will be handled by LaunchedEffect when update completes
                         }
                     },
                     onBack = {
                         reservationViewModel.clearErrorMessage()
+                        isUpdatingReservation = false
                         currentScreen = if (selectedReservation == null) "calendar" else "reservation_details"
                     }
                 )

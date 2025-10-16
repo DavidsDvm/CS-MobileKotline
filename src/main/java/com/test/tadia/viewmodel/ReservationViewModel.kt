@@ -25,7 +25,8 @@ data class ReservationUiState(
     val reservations: List<Reservation> = emptyList(),
     val timeSlots: List<TimeSlot> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val operationSuccessful: Boolean = false
 )
 
 class ReservationViewModel(
@@ -124,23 +125,34 @@ class ReservationViewModel(
             
             reservationRepository.addReservation(reservation)
             loadReservationsForRoomAndDate(roomId, date)
-            _uiState.value = _uiState.value.copy(errorMessage = null, isLoading = false)
+            _uiState.value = _uiState.value.copy(errorMessage = null, isLoading = false, operationSuccessful = true)
         }
     }
 
     fun updateReservation(reservation: Reservation) {
         viewModelScope.launch {
+            // Set loading state and clear any previous errors
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            
             // Check if user can edit this reservation
             if (!reservation.canUserEdit(currentUserEmail ?: "")) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "No tienes permisos para editar esta reservación"
+                    errorMessage = "No tienes permisos para editar esta reservación",
+                    isLoading = false
                 )
                 return@launch
             }
             
-            reservationRepository.updateReservation(reservation)
-            loadReservationsForRoomAndDate(reservation.roomId, reservation.getDate())
-            _uiState.value = _uiState.value.copy(errorMessage = null)
+            try {
+                reservationRepository.updateReservation(reservation)
+                loadReservationsForRoomAndDate(reservation.roomId, reservation.getDate())
+                _uiState.value = _uiState.value.copy(errorMessage = null, isLoading = false, operationSuccessful = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error al actualizar la reservación: ${e.message}",
+                    isLoading = false
+                )
+            }
         }
     }
 
@@ -227,5 +239,9 @@ class ReservationViewModel(
 
     fun clearErrorMessage() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+    
+    fun clearSuccessFlag() {
+        _uiState.value = _uiState.value.copy(operationSuccessful = false)
     }
 }

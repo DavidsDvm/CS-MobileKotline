@@ -280,9 +280,9 @@ fun ReservationFormScreen(
             // Save button
             Button(
                 onClick = {
-                    // Validate date (only future dates allowed)
+                    // Validate date (only future dates allowed for NEW reservations)
                     val today = LocalDate.now()
-                    if (selectedDate.isBefore(today)) {
+                    if (reservation == null && selectedDate.isBefore(today)) {
                         showDateError = true
                         showTimeError = false
                         return@Button
@@ -314,7 +314,7 @@ fun ReservationFormScreen(
                         purpose = purpose,
                         isRecurring = isRecurring,
                         recurringPattern = if (isRecurring) recurringPattern else null,
-                        createdByEmail = userEmail // Use the form's userEmail as the creator
+                        createdByEmail = reservation?.createdByEmail ?: userEmail // Preserve original creator when editing
                     )
                     onSaveReservation(newReservation)
                 },
