@@ -15,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.test.tadia.ui.theme.TadIATheme
 import com.test.tadia.viewmodel.RegisterViewModel
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RegisterScreen(
     modifier: Modifier = Modifier,
@@ -39,6 +42,7 @@ fun RegisterScreen(
 
     val passwordStrength = remember(password) { PasswordStrength.from(password) }
     val uiState by viewModel.uiState.collectAsState()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -183,7 +187,10 @@ fun RegisterScreen(
             Spacer(Modifier.height(26.dp))
 
             Button(
-                onClick = { viewModel.register(email.trim(), name.trim(), password) },
+                onClick = { 
+                    keyboardController?.hide()
+                    viewModel.register(email.trim(), name.trim(), password) 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

@@ -19,8 +19,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.test.tadia.viewmodel.LoginViewModel
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
@@ -43,6 +46,7 @@ fun LoginScreen(
     var showPass by remember { mutableStateOf(false) }
     
     val uiState by viewModel.uiState.collectAsState()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -145,7 +149,10 @@ fun LoginScreen(
 
             // Iniciar sesión (primary)
             Button(
-                onClick = { viewModel.login(user.trim(), pass) },
+                onClick = { 
+                    keyboardController?.hide()
+                    viewModel.login(user.trim(), pass) 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -200,56 +207,56 @@ fun LoginScreen(
             Spacer(Modifier.height(20.dp))
 
             // Divider with "O ingresa con"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Divider(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(1.dp)
-                )
-                Text(
-                    text = "  O ingresa con  ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Divider(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(1.dp)
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Outlook button (icon inside rounded card)
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.clickable { onLoginWithOutlook() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .padding(10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Replace with your Outlook logo drawable (e.g., outlook_logo.png)
-                    Image(
-                        painter = painterResource(id = R.drawable.outlook_logo),
-                        contentDescription = "Outlook",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.Transparent),
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(28.dp))
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Divider(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(1.dp)
+//                )
+//                Text(
+//                    text = "  O ingresa con  ",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//                Divider(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(1.dp)
+//                )
+//            }
+//
+//            Spacer(Modifier.height(16.dp))
+//
+//            // Outlook button (icon inside rounded card)
+//            Card(
+//                shape = RoundedCornerShape(16.dp),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+//                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+//                modifier = Modifier.clickable { onLoginWithOutlook() }
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(72.dp)
+//                        .padding(10.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    // Replace with your Outlook logo drawable (e.g., outlook_logo.png)
+//                    Image(
+//                        painter = painterResource(id = R.drawable.outlook_logo),
+//                        contentDescription = "Outlook",
+//                        modifier = Modifier
+//                            .size(40.dp)
+//                            .clip(CircleShape)
+//                            .background(Color.Transparent),
+//                        contentScale = ContentScale.Fit
+//                    )
+//                }
+//            }
+//
+//            Spacer(Modifier.height(28.dp))
         }
     }
 }
