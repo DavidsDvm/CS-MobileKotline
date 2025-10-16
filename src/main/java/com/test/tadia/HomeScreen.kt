@@ -25,7 +25,8 @@ import com.test.tadia.data.User
 @Composable
 fun HomeScreen(
     user: User,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToReservations: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(BottomTab.Home) }
 
@@ -85,7 +86,7 @@ fun HomeScreen(
             ) {
                 MenuCard(
                     title = "Agendamiento de espacios",
-                    onClick = { /* TODO: navigate */ }
+                    onClick = onNavigateToReservations
                 )
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
@@ -146,7 +147,8 @@ private fun HomeScreenPreview() {
                 name = "Test User",
                 passwordHash = "hashed_password"
             ),
-            onLogout = {}
+            onLogout = {},
+            onNavigateToReservations = {}
         )
     }
 }
