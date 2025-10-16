@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -24,11 +25,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.test.tadia.ui.theme.TadIATheme
+import com.test.tadia.viewmodel.RegisterViewModel
 
 @Composable
 fun RegisterScreen(
     modifier: Modifier = Modifier,
-    onRegister: (email: String, name: String, password: String) -> Unit,
+    viewModel: RegisterViewModel,
     onBackToLogin: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
@@ -36,6 +38,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
 
     val passwordStrength = remember(password) { PasswordStrength.from(password) }
+    val uiState by viewModel.uiState.collectAsState()
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -156,16 +159,45 @@ fun RegisterScreen(
                 }
             )
 
+            // Error message
+            uiState.errorMessage?.let { error ->
+                Spacer(Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                LaunchedEffect(error) {
+                    kotlinx.coroutines.delay(5000)
+                    viewModel.clearError()
+                }
+            }
+
             Spacer(Modifier.height(26.dp))
 
             Button(
-                onClick = { onRegister(email.trim(), name.trim(), password) },
+                onClick = { viewModel.register(email.trim(), name.trim(), password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                enabled = !uiState.isLoading
             ) {
-                Text("Registrarse", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Registrarse", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
 
             Spacer(Modifier.height(18.dp))
@@ -235,5 +267,9 @@ enum class PasswordStrength(val level: Int, val label: String) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun RegisterPreview() {
-    TadIATheme { RegisterScreen(onRegister = { _, _, _ -> }) }
+    TadIATheme { 
+        // Note: This preview won't work with the actual ViewModel
+        // In a real app, you'd create a mock ViewModel for previews
+        Text("Register Screen Preview - Use actual app for testing")
+    }
 }

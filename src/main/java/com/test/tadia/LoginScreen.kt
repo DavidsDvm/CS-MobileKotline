@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -28,17 +29,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.test.tadia.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onLogin: (user: String, pass: String) -> Unit,
+    viewModel: LoginViewModel,
     onRegister: () -> Unit,
     onLoginWithOutlook: () -> Unit
 ) {
     var user by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var showPass by remember { mutableStateOf(false) }
+    
+    val uiState by viewModel.uiState.collectAsState()
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -141,13 +145,42 @@ fun LoginScreen(
 
             // Iniciar sesión (primary)
             Button(
-                onClick = { onLogin(user.trim(), pass) },
+                onClick = { viewModel.login(user.trim(), pass) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
+                enabled = !uiState.isLoading
             ) {
-                Text("Iniciar sesión", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Iniciar sesión", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            // Error message
+            uiState.errorMessage?.let { error ->
+                Spacer(Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                LaunchedEffect(error) {
+                    kotlinx.coroutines.delay(5000)
+                    viewModel.clearError()
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -227,10 +260,8 @@ fun LoginScreen(
 @Composable
 private fun LoginPreview() {
     MaterialTheme {
-        LoginScreen(
-            onLogin = { _, _ -> },
-            onRegister = {},
-            onLoginWithOutlook = {}
-        )
+        // Note: This preview won't work with the actual ViewModel
+        // In a real app, you'd create a mock ViewModel for previews
+        Text("Login Screen Preview - Use actual app for testing")
     }
 }
