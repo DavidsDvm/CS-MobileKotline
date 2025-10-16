@@ -1,22 +1,27 @@
 package com.test.tadia.data
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.time.LocalTime
 
+@Entity(tableName = "reservations")
 data class Reservation(
+    @PrimaryKey
     val id: String,
     val roomId: String,
     val roomName: String,
     val userName: String,
     val userEmail: String,
-    val date: LocalDate,
-    val startTime: LocalTime,
-    val endTime: LocalTime,
+    val date: String, // Store as String for Room compatibility
+    val startTime: String, // Store as String for Room compatibility
+    val endTime: String, // Store as String for Room compatibility
     val purpose: String,
     val isRecurring: Boolean = false,
-    val recurringPattern: RecurringPattern? = null,
-    val status: ReservationStatus = ReservationStatus.CONFIRMED,
-    val createdAt: Long = System.currentTimeMillis()
+    val recurringPattern: String? = null, // Store as String for Room compatibility
+    val status: String = "CONFIRMED", // Store as String for Room compatibility
+    val createdAt: Long = System.currentTimeMillis(),
+    val createdByEmail: String // Track who created the reservation
 )
 
 enum class ReservationStatus {
@@ -32,6 +37,7 @@ enum class RecurringPattern {
     MONTHLY
 }
 
+
 data class TimeSlot(
     val startTime: LocalTime,
     val endTime: LocalTime,
@@ -39,8 +45,10 @@ data class TimeSlot(
     val reservation: Reservation? = null
 )
 
-// Sample reservations data
-object ReservationRepository {
+// Legacy ReservationRepository - now replaced by database-backed ReservationRepository
+// This is kept for backward compatibility but should not be used
+@Deprecated("Use ReservationRepository from data package instead")
+object LegacyReservationRepository {
     private val reservations = mutableListOf<Reservation>()
     
     fun addReservation(reservation: Reservation) {
@@ -60,7 +68,7 @@ object ReservationRepository {
     
     fun getReservationsByRoomAndDate(roomId: String, date: LocalDate): List<Reservation> {
         return reservations.filter { 
-            it.roomId == roomId && it.date == date 
+            it.roomId == roomId && it.getDate() == date 
         }
     }
     
@@ -76,7 +84,7 @@ object ReservationRepository {
         val tomorrow = today.plusDays(1)
         
         addReservation(
-            Reservation(
+            createReservation(
                 id = "1",
                 roomId = "1",
                 roomName = "Sala de Cine",
@@ -86,12 +94,13 @@ object ReservationRepository {
                 startTime = LocalTime.of(7, 0),
                 endTime = LocalTime.of(9, 0),
                 purpose = "Presentación de proyecto",
-                isRecurring = false
+                isRecurring = false,
+                createdByEmail = "daniela.mesa@university.edu"
             )
         )
         
         addReservation(
-            Reservation(
+            createReservation(
                 id = "2",
                 roomId = "1", 
                 roomName = "Sala de Cine",
@@ -101,12 +110,13 @@ object ReservationRepository {
                 startTime = LocalTime.of(10, 0),
                 endTime = LocalTime.of(11, 0),
                 purpose = "Reunión de equipo",
-                isRecurring = false
+                isRecurring = false,
+                createdByEmail = "juan.rodriguez@university.edu"
             )
         )
         
         addReservation(
-            Reservation(
+            createReservation(
                 id = "3",
                 roomId = "1",
                 roomName = "Sala de Cine", 
@@ -117,7 +127,8 @@ object ReservationRepository {
                 endTime = LocalTime.of(18, 0),
                 purpose = "Clase de cine",
                 isRecurring = true,
-                recurringPattern = RecurringPattern.WEEKLY
+                recurringPattern = RecurringPattern.WEEKLY,
+                createdByEmail = "andre.correa@university.edu"
             )
         )
     }

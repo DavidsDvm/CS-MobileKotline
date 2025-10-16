@@ -14,6 +14,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.test.tadia.data.User
 import com.test.tadia.data.Room
 import com.test.tadia.data.Reservation
+import com.test.tadia.data.getDate
+import com.test.tadia.data.getStartTime
+import com.test.tadia.data.getEndTime
+import com.test.tadia.data.getRecurringPattern
 import com.test.tadia.ui.theme.TadIATheme
 import com.test.tadia.viewmodel.LoginViewModel
 import com.test.tadia.viewmodel.RegisterViewModel
@@ -44,10 +48,23 @@ fun TadIAApp() {
     
     val application = LocalContext.current.applicationContext as TadIAApplication
     val userRepository = application.userRepository
-    val reservationViewModel: ReservationViewModel = viewModel { ReservationViewModel() }
+    val reservationRepository = application.reservationRepository
+    val reservationViewModel: ReservationViewModel = viewModel { ReservationViewModel(reservationRepository) }
     
     // Collect UI state at the top level
     val reservationUiState by reservationViewModel.uiState.collectAsState()
+    
+    // Watch for successful reservation creation (no error and not loading)
+    LaunchedEffect(reservationUiState.errorMessage, reservationUiState.isLoading) {
+        if (currentScreen == "reservation_form" && 
+            reservationUiState.errorMessage == null && 
+            !reservationUiState.isLoading &&
+            selectedReservation == null) {
+            // Successful creation - navigate back to calendar
+            selectedReservation = null
+            currentScreen = "calendar"
+        }
+    }
     
     when (currentScreen) {
         "login" -> {
@@ -71,6 +88,9 @@ fun TadIAApp() {
             LaunchedEffect(loginUiState.isLoginSuccessful) {
                 if (loginUiState.isLoginSuccessful) {
                     currentUser = loginUiState.currentUser
+                    currentUser?.let { user ->
+                        reservationViewModel.setCurrentUser(user.email)
+                    }
                     currentScreen = "home"
                 }
             }
@@ -147,40 +167,47 @@ fun TadIAApp() {
         }
         "reservation_details" -> {
             selectedRoom?.let { room ->
-                ReservationDetailsScreen(
-                    room = room,
-                    selectedDate = selectedDate,
-                    reservations = reservationUiState.reservations,
-                    timeSlots = reservationUiState.timeSlots,
-                    selectedReservation = selectedReservation,
-                    onDateSelected = { date ->
-                        selectedDate = date
-                        reservationViewModel.selectDate(date)
-                    },
-                    onReservationSelected = { reservation ->
-                        selectedReservation = reservation
-                    },
-                    onEditReservation = { reservation ->
-                        selectedReservation = reservation
-                        currentScreen = "reservation_form"
-                    },
-                    onDeleteReservation = { reservation ->
-                        reservationViewModel.deleteReservation(reservation.id)
-                        selectedReservation = null
-                    },
-                    onShowDeleteConfirmation = { reservation ->
-                        selectedReservation = reservation
-                        showDeleteConfirmation = true
-                    },
+                currentUser?.let { user ->
+                    ReservationDetailsScreen(
+                        room = room,
+                        selectedDate = selectedDate,
+                        reservations = reservationUiState.reservations,
+                        timeSlots = reservationUiState.timeSlots,
+                        selectedReservation = selectedReservation,
+                        currentUserEmail = user.email,
+                        errorMessage = reservationUiState.errorMessage,
+                        onDateSelected = { date ->
+                            selectedDate = date
+                            reservationViewModel.selectDate(date)
+                        },
+                        onReservationSelected = { reservation ->
+                            selectedReservation = reservation
+                        },
+                        onEditReservation = { reservation ->
+                            selectedReservation = reservation
+                            reservationViewModel.clearErrorMessage()
+                            currentScreen = "reservation_form"
+                        },
+                        onDeleteReservation = { reservation ->
+                            reservationViewModel.deleteReservation(reservation.id)
+                            selectedReservation = null
+                        },
+                        onShowDeleteConfirmation = { reservation ->
+                            selectedReservation = reservation
+                            showDeleteConfirmation = true
+                        },
                     onNewReservation = {
                         selectedReservation = null
+                        reservationViewModel.clearErrorMessage()
                         currentScreen = "reservation_form"
                     },
                     onBack = {
                         selectedReservation = null
+                        reservationViewModel.clearErrorMessage()
                         currentScreen = "calendar"
                     }
-                )
+                    )
+                }
             }
         }
         "reservation_form" -> {
@@ -189,6 +216,8 @@ fun TadIAApp() {
                     room = room,
                     selectedDate = selectedDate,
                     reservation = selectedReservation,
+                    errorMessage = reservationUiState.errorMessage,
+                    isLoading = reservationUiState.isLoading,
                     onSaveReservation = { reservation ->
                         if (selectedReservation == null) {
                             // Creating new reservation
@@ -197,21 +226,23 @@ fun TadIAApp() {
                                 roomName = reservation.roomName,
                                 userName = reservation.userName,
                                 userEmail = reservation.userEmail,
-                                date = reservation.date,
-                                startTime = reservation.startTime,
-                                endTime = reservation.endTime,
+                                date = reservation.getDate(),
+                                startTime = reservation.getStartTime(),
+                                endTime = reservation.getEndTime(),
                                 purpose = reservation.purpose,
                                 isRecurring = reservation.isRecurring,
-                                recurringPattern = reservation.recurringPattern
+                                recurringPattern = reservation.getRecurringPattern()
                             )
+                            // Don't navigate immediately - wait for validation result
                         } else {
                             // Updating existing reservation
                             reservationViewModel.updateReservation(reservation)
+                            selectedReservation = null
+                            currentScreen = "calendar"
                         }
-                        selectedReservation = null
-                        currentScreen = "calendar"
                     },
                     onBack = {
+                        reservationViewModel.clearErrorMessage()
                         currentScreen = if (selectedReservation == null) "calendar" else "reservation_details"
                     }
                 )

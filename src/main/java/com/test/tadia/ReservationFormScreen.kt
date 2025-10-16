@@ -18,6 +18,10 @@ import androidx.compose.ui.unit.sp
 import com.test.tadia.data.Reservation
 import com.test.tadia.data.RecurringPattern
 import com.test.tadia.data.Room
+import com.test.tadia.data.getStartTime
+import com.test.tadia.data.getEndTime
+import com.test.tadia.data.getRecurringPattern
+import com.test.tadia.data.createReservation
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -27,16 +31,18 @@ fun ReservationFormScreen(
     room: Room,
     selectedDate: LocalDate,
     reservation: Reservation? = null, // null for new reservation, not null for editing
+    errorMessage: String? = null,
+    isLoading: Boolean = false,
     onSaveReservation: (Reservation) -> Unit,
     onBack: () -> Unit
 ) {
     var userName by remember { mutableStateOf(reservation?.userName ?: "Usuario Demo") }
     var userEmail by remember { mutableStateOf(reservation?.userEmail ?: "usuario@university.edu") }
     var purpose by remember { mutableStateOf(reservation?.purpose ?: "Reunión de trabajo") }
-    var startTime by remember { mutableStateOf(reservation?.startTime ?: LocalTime.of(9, 0)) }
-    var endTime by remember { mutableStateOf(reservation?.endTime ?: LocalTime.of(10, 0)) }
+    var startTime by remember { mutableStateOf(reservation?.getStartTime() ?: LocalTime.of(9, 0)) }
+    var endTime by remember { mutableStateOf(reservation?.getEndTime() ?: LocalTime.of(10, 0)) }
     var isRecurring by remember { mutableStateOf(reservation?.isRecurring ?: false) }
-    var recurringPattern by remember { mutableStateOf(reservation?.recurringPattern ?: RecurringPattern.WEEKLY) }
+    var recurringPattern by remember { mutableStateOf(reservation?.getRecurringPattern() ?: RecurringPattern.WEEKLY) }
     
     var showTimePicker by remember { mutableStateOf(false) }
     var showRecurringDialog by remember { mutableStateOf(false) }
@@ -102,6 +108,28 @@ fun ReservationFormScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+
+            // Error message display
+            if (errorMessage != null) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE) // Light red background
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFFD32F2F), // Red text
+                            fontSize = 14.sp
+                        ),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
 
             // Form fields
             OutlinedTextField(
@@ -274,7 +302,7 @@ fun ReservationFormScreen(
                     showTimeError = false
                     showDateError = false
                     
-                    val newReservation = Reservation(
+                    val newReservation = createReservation(
                         id = reservation?.id ?: System.currentTimeMillis().toString(),
                         roomId = room.id,
                         roomName = room.name,
@@ -285,7 +313,8 @@ fun ReservationFormScreen(
                         endTime = endTime,
                         purpose = purpose,
                         isRecurring = isRecurring,
-                        recurringPattern = if (isRecurring) recurringPattern else null
+                        recurringPattern = if (isRecurring) recurringPattern else null,
+                        createdByEmail = userEmail // Use the form's userEmail as the creator
                     )
                     onSaveReservation(newReservation)
                 },
@@ -294,12 +323,17 @@ fun ReservationFormScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2196F3) // Blue color
+                    containerColor = if (errorMessage == null) Color(0xFF2196F3) else Color(0xFFBDBDBD) // Blue when enabled, gray when disabled
                 ),
-                enabled = userName.isNotBlank() && userEmail.isNotBlank() && purpose.isNotBlank()
+                enabled = userName.isNotBlank() && userEmail.isNotBlank() && purpose.isNotBlank() && errorMessage == null && !isLoading
             ) {
                 Text(
-                    text = if (reservation == null) "Crear Reservación" else "Actualizar Reservación",
+                    text = when {
+                        isLoading -> "Validando..."
+                        errorMessage != null -> "Resolución no disponible"
+                        reservation == null -> "Crear Reservación"
+                        else -> "Actualizar Reservación"
+                    },
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp
@@ -360,22 +394,15 @@ private fun TimePickerDialog(
                 )
                 
                 // Hour selection
-                Text("Hora: ${selectedTime.hour}")
+                Text(
+                    text = "Hora: ${selectedTime.hour}",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = { 
-                            val newTime = selectedTime.plusHours(1)
-                            if (newTime.hour <= 17) {
-                                selectedTime = newTime
-                            }
-                        },
-                        modifier = Modifier.size(48.dp),
-                        enabled = selectedTime.hour < 17
-                    ) {
-                        Text("+")
-                    }
                     Button(
                         onClick = { 
                             val newTime = selectedTime.minusHours(1)
@@ -383,35 +410,116 @@ private fun TimePickerDialog(
                                 selectedTime = newTime
                             }
                         },
-                        modifier = Modifier.size(48.dp),
-                        enabled = selectedTime.hour > 7
+                        modifier = Modifier.size(56.dp),
+                        enabled = selectedTime.hour > 7,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3)
+                        ),
+                        shape = RoundedCornerShape(28.dp)
                     ) {
-                        Text("-")
+                        Text(
+                            text = "-",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 24.sp
+                            ),
+                            color = Color.White
+                        )
+                    }
+                    
+                    Text(
+                        text = "${selectedTime.hour}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 32.sp
+                        ),
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    
+                    Button(
+                        onClick = { 
+                            val newTime = selectedTime.plusHours(1)
+                            if (newTime.hour <= 17) {
+                                selectedTime = newTime
+                            }
+                        },
+                        modifier = Modifier.size(56.dp),
+                        enabled = selectedTime.hour < 17,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3)
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(
+                            text = "+",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 24.sp
+                            ),
+                            color = Color.White
+                        )
                     }
                 }
                 
                 Spacer(Modifier.height(16.dp))
                 
                 // Minute selection
-                Text("Minutos: ${selectedTime.minute}")
+                Text(
+                    text = "Minutos: ${selectedTime.minute}",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = { 
-                            selectedTime = selectedTime.plusMinutes(15)
-                        },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Text("+15")
-                    }
                     Button(
                         onClick = { 
                             selectedTime = selectedTime.minusMinutes(15)
                         },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        ),
+                        shape = RoundedCornerShape(28.dp)
                     ) {
-                        Text("-15")
+                        Text(
+                            text = "-15",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            ),
+                            color = Color.White
+                        )
+                    }
+                    
+                    Text(
+                        text = "${selectedTime.minute}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 32.sp
+                        ),
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    
+                    Button(
+                        onClick = { 
+                            selectedTime = selectedTime.plusMinutes(15)
+                        },
+                        modifier = Modifier.size(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(
+                            text = "+15",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            ),
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -481,6 +589,8 @@ private fun ReservationFormScreenPreview() {
                 capacity = 50
             ),
             selectedDate = LocalDate.now(),
+            errorMessage = null,
+            isLoading = false,
             onSaveReservation = {},
             onBack = {}
         )

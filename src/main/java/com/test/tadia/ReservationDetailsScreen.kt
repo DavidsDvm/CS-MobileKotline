@@ -29,6 +29,10 @@ import androidx.compose.ui.unit.sp
 import com.test.tadia.data.Reservation
 import com.test.tadia.data.Room
 import com.test.tadia.data.TimeSlot
+import com.test.tadia.data.getStartTime
+import com.test.tadia.data.getEndTime
+import com.test.tadia.data.getDate
+import com.test.tadia.data.canUserEdit
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.*
@@ -41,6 +45,8 @@ fun ReservationDetailsScreen(
     reservations: List<Reservation>,
     timeSlots: List<TimeSlot>,
     selectedReservation: Reservation?,
+    currentUserEmail: String,
+    errorMessage: String? = null,
     onDateSelected: (LocalDate) -> Unit,
     onReservationSelected: (Reservation) -> Unit,
     onEditReservation: (Reservation) -> Unit,
@@ -104,6 +110,28 @@ fun ReservationDetailsScreen(
                 )
             }
 
+            // Error message display
+            if (errorMessage != null) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE) // Light red background
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFFD32F2F), // Red text
+                            fontSize = 14.sp
+                        ),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
             // Calendar
             CalendarView(
                 selectedDate = selectedDate,
@@ -138,62 +166,65 @@ fun ReservationDetailsScreen(
 
             // CRUD Action buttons
             if (selectedReservation != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Edit button
-                    Button(
-                        onClick = { onEditReservation(selectedReservation) },
+                // Only show edit/delete buttons if user can edit this reservation
+                if (selectedReservation.canUserEdit(currentUserEmail)) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2196F3) // Blue color
-                        )
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Editar",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
+                        // Edit button
+                        Button(
+                            onClick = { onEditReservation(selectedReservation) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2196F3) // Blue color
                             )
-                        )
-                    }
+                        ) {
+                            Icon(
+                                Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "Editar",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                            )
+                        }
 
-                    // Delete button
-                    Button(
-                        onClick = { onShowDeleteConfirmation(selectedReservation) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF44336) // Red color
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Eliminar",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
+                        // Delete button
+                        Button(
+                            onClick = { onShowDeleteConfirmation(selectedReservation) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFF44336) // Red color
                             )
-                        )
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "Eliminar",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp
+                                )
+                            )
+                        }
                     }
                 }
             } else {
@@ -390,7 +421,7 @@ private fun ReservationCardWithSelection(
             Spacer(Modifier.height(4.dp))
             
             Text(
-                text = "${reservation.startTime.toString().substring(0, 5)} - ${reservation.endTime.toString().substring(0, 5)}",
+                text = "${reservation.getStartTime().toString().substring(0, 5)} - ${reservation.getEndTime().toString().substring(0, 5)}",
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -400,7 +431,7 @@ private fun ReservationCardWithSelection(
             if (reservation.isRecurring) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Todos los ${getDayOfWeek(reservation.date)}",
+                    text = "Todos los ${getDayOfWeek(reservation.getDate())}",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 10.sp,
                         color = Color(0xFF1976D2)
@@ -439,6 +470,7 @@ private fun ReservationDetailsScreenPreview() {
             reservations = emptyList(),
             timeSlots = emptyList(),
             selectedReservation = null,
+            currentUserEmail = "test@university.edu",
             onDateSelected = {},
             onReservationSelected = {},
             onEditReservation = {},

@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.sp
 import com.test.tadia.data.Reservation
 import com.test.tadia.data.Room
 import com.test.tadia.data.TimeSlot
+import com.test.tadia.data.getStartTime
+import com.test.tadia.data.getEndTime
+import com.test.tadia.data.getDate
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.*
@@ -307,7 +310,7 @@ private fun ReservationCard(
             Spacer(Modifier.height(4.dp))
             
             Text(
-                text = "${reservation.startTime.toString().substring(0, 5)} - ${reservation.endTime.toString().substring(0, 5)}",
+                text = "${reservation.getStartTime().toString().substring(0, 5)} - ${reservation.getEndTime().toString().substring(0, 5)}",
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -317,7 +320,7 @@ private fun ReservationCard(
             if (reservation.isRecurring) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Todos los ${getDayOfWeek(reservation.date)}",
+                    text = "Todos los ${getDayOfWeek(reservation.getDate())}",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 10.sp,
                         color = Color(0xFF1976D2)
