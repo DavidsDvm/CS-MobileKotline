@@ -94,7 +94,7 @@ fun LoginScreen(
 
             // Usuario
             Text(
-                text = "Usuario",
+                text = "Correo electrónico",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
@@ -111,7 +111,7 @@ fun LoginScreen(
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Person, contentDescription = null)
                 },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
             Spacer(Modifier.height(22.dp))
