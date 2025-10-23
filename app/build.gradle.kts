@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
-    // id("com.google.gms.google-services") // Temporarily disabled - add correct google-services.json
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -60,10 +60,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended:1.5.1")
     
-    // Room dependencies
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    // Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
     
     // ViewModel and LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
@@ -75,10 +76,6 @@ dependencies {
     // Password hashing
     implementation("org.mindrot:jbcrypt:0.4")
     
-    // Firebase dependencies
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-database-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -2,6 +2,7 @@ package com.test.tadia.data
 
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.Date
 
 // Extension functions to convert between LocalDate/LocalTime and String
 fun LocalDate.toDatabaseString(): String = this.toString()
@@ -30,7 +31,7 @@ fun createReservation(
     isRecurring: Boolean = false,
     recurringPattern: RecurringPattern? = null,
     status: ReservationStatus = ReservationStatus.CONFIRMED,
-    createdAt: Long = System.currentTimeMillis(),
+    createdAt: Date = Date(),
     createdByEmail: String
 ): Reservation {
     return Reservation(

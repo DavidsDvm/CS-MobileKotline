@@ -1,22 +1,22 @@
 package com.test.tadia
 
 import android.app.Application
-import com.test.tadia.data.AppDatabase
-import com.test.tadia.data.ReservationRepository
-import com.test.tadia.data.createReservation
+import com.test.tadia.data.Reservation
 import com.test.tadia.data.RecurringPattern
-import com.test.tadia.repository.UserRepository
+import com.test.tadia.repository.FirebaseUserRepository
+import com.test.tadia.repository.FirebaseReservationRepository
+import com.test.tadia.data.createReservation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 class TadIAApplication : Application() {
-    val database by lazy { AppDatabase.getDatabase(this) }
-    val userRepository by lazy { UserRepository(database) }
-    val reservationRepository by lazy { ReservationRepository(database.reservationDao()) }
+    val userRepository by lazy { FirebaseUserRepository() }
+    val reservationRepository by lazy { FirebaseReservationRepository() }
     
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
@@ -35,7 +35,7 @@ class TadIAApplication : Application() {
                 // Add sample reservations
                 reservationRepository.addReservation(
                     createReservation(
-                        id = "1",
+                        id = UUID.randomUUID().toString(),
                         roomId = "1",
                         roomName = "Sala de Cine",
                         userName = "Daniela Mesa",
@@ -51,7 +51,7 @@ class TadIAApplication : Application() {
                 
                 reservationRepository.addReservation(
                     createReservation(
-                        id = "2",
+                        id = UUID.randomUUID().toString(),
                         roomId = "1", 
                         roomName = "Sala de Cine",
                         userName = "Juan Jose Rodriguez",
@@ -67,7 +67,7 @@ class TadIAApplication : Application() {
                 
                 reservationRepository.addReservation(
                     createReservation(
-                        id = "3",
+                        id = UUID.randomUUID().toString(),
                         roomId = "1",
                         roomName = "Sala de Cine", 
                         userName = "Andre Correa Torres",

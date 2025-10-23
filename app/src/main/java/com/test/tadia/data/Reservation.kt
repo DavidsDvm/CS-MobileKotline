@@ -1,27 +1,26 @@
 package com.test.tadia.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import com.google.firebase.firestore.DocumentId
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.Date
 
-@Entity(tableName = "reservations")
 data class Reservation(
-    @PrimaryKey
-    val id: String,
-    val roomId: String,
-    val roomName: String,
-    val userName: String,
-    val userEmail: String,
-    val date: String, // Store as String for Room compatibility
-    val startTime: String, // Store as String for Room compatibility
-    val endTime: String, // Store as String for Room compatibility
-    val purpose: String,
+    @DocumentId
+    val id: String = "",
+    val roomId: String = "",
+    val roomName: String = "",
+    val userName: String = "",
+    val userEmail: String = "",
+    val date: String = "", // Store as String for Firebase compatibility
+    val startTime: String = "", // Store as String for Firebase compatibility
+    val endTime: String = "", // Store as String for Firebase compatibility
+    val purpose: String = "",
     val isRecurring: Boolean = false,
-    val recurringPattern: String? = null, // Store as String for Room compatibility
-    val status: String = "CONFIRMED", // Store as String for Room compatibility
-    val createdAt: Long = System.currentTimeMillis(),
-    val createdByEmail: String // Track who created the reservation
+    val recurringPattern: String? = null, // Store as String for Firebase compatibility
+    val status: String = "CONFIRMED", // Store as String for Firebase compatibility
+    val createdAt: Date = Date(),
+    val createdByEmail: String = "" // Track who created the reservation
 )
 
 enum class ReservationStatus {
