@@ -11,6 +11,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.FirebaseApp
+import com.test.tadia.data.FirebaseService
 import com.test.tadia.data.User
 import com.test.tadia.data.Room
 import com.test.tadia.data.Reservation
@@ -18,6 +20,7 @@ import com.test.tadia.data.getDate
 import com.test.tadia.data.getStartTime
 import com.test.tadia.data.getEndTime
 import com.test.tadia.data.getRecurringPattern
+import com.test.tadia.repository.FirebaseRepository
 import com.test.tadia.ui.theme.TadIATheme
 import com.test.tadia.viewmodel.LoginViewModel
 import com.test.tadia.viewmodel.RegisterViewModel
@@ -27,6 +30,10 @@ import java.time.LocalDate
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Firebase - uncomment when you have correct google-services.json
+        // FirebaseApp.initializeApp(this)
+        
         setContent {
             TadIATheme {
                 TadIAApp()

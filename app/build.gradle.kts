@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
+    // id("com.google.gms.google-services") // Temporarily disabled - add correct google-services.json
 }
 
 android {
@@ -73,6 +74,11 @@ dependencies {
     
     // Password hashing
     implementation("org.mindrot:jbcrypt:0.4")
+    
+    // Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
