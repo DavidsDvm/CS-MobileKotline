@@ -11,6 +11,7 @@ import com.test.tadia.data.getStartTime
 import com.test.tadia.data.getEndTime
 import com.test.tadia.data.createReservation
 import com.test.tadia.data.canUserEdit
+import com.test.tadia.repository.FirebaseReservationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,7 @@ data class ReservationUiState(
 )
 
 class ReservationViewModel(
-    private val reservationRepository: ReservationRepository
+    private val reservationRepository: FirebaseReservationRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ReservationUiState())
     val uiState: StateFlow<ReservationUiState> = _uiState.asStateFlow()

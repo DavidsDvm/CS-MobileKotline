@@ -1,16 +1,17 @@
 # TadIA Authentication Implementation
 
-This document describes the complete authentication system implementation for the TadIA app using Room database with SQLite and proper MVVM architecture.
+This document describes the complete authentication system implementation for the TadIA app using Firebase Authentication and Firestore with proper MVVM architecture.
 
 ## Architecture Overview
 
 The implementation follows the MVVM (Model-View-ViewModel) pattern with the following components:
 
 ### Data Layer
-- **User Entity**: Room entity representing user data
-- **UserDao**: Data Access Object for database operations
-- **AppDatabase**: Room database configuration
-- **UserRepository**: Business logic layer for user operations
+- **User Entity**: Firebase-compatible data class representing user data
+- **FirebaseUserRepository**: Business logic layer for Firebase user operations
+- **FirebaseReservationRepository**: Business logic layer for Firebase reservation operations
+- **Firebase Authentication**: Secure user authentication
+- **Firestore**: Cloud database for data storage
 
 ### Presentation Layer
 - **LoginViewModel**: Manages login screen state and logic
@@ -33,10 +34,10 @@ The implementation follows the MVVM (Model-View-ViewModel) pattern with the foll
 - Loading states and user feedback
 
 ### Database
-- Room database with SQLite backend
-- User table with email as primary key
-- Secure password storage with BCrypt hashing
-- Proper database initialization and management
+- Firebase Firestore cloud database
+- User documents with email as document ID
+- Firebase Authentication for secure user management
+- Real-time data synchronization
 
 ### UI/UX
 - Material Design 3 components
@@ -50,16 +51,15 @@ The implementation follows the MVVM (Model-View-ViewModel) pattern with the foll
 ```
 src/main/java/com/test/tadia/
 ├── data/
-│   ├── User.kt                 # Room entity
-│   ├── UserDao.kt             # Database operations
-│   └── AppDatabase.kt         # Database configuration
+│   ├── User.kt                 # Firebase-compatible data class
+│   ├── Reservation.kt         # Firebase-compatible data class
+│   └── Room.kt                # Room data class
 ├── repository/
-│   └── UserRepository.kt       # Business logic
+│   ├── FirebaseUserRepository.kt       # Firebase user operations
+│   └── FirebaseReservationRepository.kt # Firebase reservation operations
 ├── viewmodel/
 │   ├── LoginViewModel.kt      # Login state management
 │   └── RegisterViewModel.kt   # Registration state management
-├── utils/
-│   └── PasswordUtils.kt       # Password hashing utilities
 ├── LoginScreen.kt             # Login UI
 ├── RegisterScreen.kt          # Registration UI
 ├── HomeScreen.kt              # Home screen after login
@@ -69,25 +69,29 @@ src/main/java/com/test/tadia/
 
 ## Dependencies Added
 
-- Room database (2.6.1)
+- Firebase BOM (32.7.0)
+- Firebase Authentication
+- Firebase Firestore
+- Firebase Analytics
 - ViewModel and LiveData (2.7.0)
 - Coroutines (1.7.3)
-- BCrypt for password hashing (0.4)
 
 ## Usage
 
 1. **Registration**: Users can register with email, name, and password
 2. **Login**: Users can login with email and password
 3. **Navigation**: Automatic navigation between screens based on authentication state
-4. **Security**: Passwords are hashed using BCrypt before storage
+4. **Security**: Firebase Authentication handles secure user management
 5. **Validation**: Email format and password strength validation
+6. **Real-time**: Firestore provides real-time data synchronization
 
 ## Security Considerations
 
-- Passwords are never stored in plain text
-- BCrypt provides secure password hashing with salt
+- Firebase Authentication provides secure user management
+- Passwords are handled securely by Firebase
 - Input validation prevents malicious data entry
 - Error messages don't reveal sensitive information
+- Firestore security rules protect data access
 
 ## Future Enhancements
 

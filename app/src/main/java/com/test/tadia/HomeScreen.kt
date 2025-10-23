@@ -144,8 +144,7 @@ private fun HomeScreenPreview() {
         HomeScreen(
             user = User(
                 email = "test@example.com",
-                name = "Test User",
-                passwordHash = "hashed_password"
+                name = "Test User"
             ),
             onLogout = {},
             onNavigateToReservations = {}

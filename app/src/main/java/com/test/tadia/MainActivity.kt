@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.FirebaseApp
 import com.test.tadia.data.User
 import com.test.tadia.data.Room
 import com.test.tadia.data.Reservation
@@ -27,6 +28,10 @@ import java.time.LocalDate
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Firebase
+        FirebaseApp.initializeApp(this)
+        
         setContent {
             TadIATheme {
                 TadIAApp()
@@ -111,9 +116,15 @@ fun TadIAApp() {
             
             // Handle successful registration
             val registerUiState by registerViewModel.uiState.collectAsState()
-            LaunchedEffect(registerUiState.isRegistrationSuccessful) {
-                if (registerUiState.isRegistrationSuccessful) {
+            
+            // Use LaunchedEffect with a key that changes
+            LaunchedEffect(registerUiState.isRegistrationSuccessful, registerUiState.isLoading) {
+                println("DEBUG: Registration state changed - isSuccessful: ${registerUiState.isRegistrationSuccessful}, isLoading: ${registerUiState.isLoading}")
+                if (registerUiState.isRegistrationSuccessful && !registerUiState.isLoading) {
+                    println("DEBUG: Registration successful, navigating to login")
                     currentScreen = "login"
+                    // Reset the registration state after navigation
+                    registerViewModel.resetRegistrationState()
                 }
             }
         }

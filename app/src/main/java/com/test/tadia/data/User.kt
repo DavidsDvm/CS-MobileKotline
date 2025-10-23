@@ -1,13 +1,11 @@
 package com.test.tadia.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import com.google.firebase.firestore.DocumentId
+import java.util.Date
 
-@Entity(tableName = "users")
 data class User(
-    @PrimaryKey
-    val email: String,
-    val name: String,
-    val passwordHash: String,
-    val createdAt: Long = System.currentTimeMillis()
+    @DocumentId
+    val email: String = "",
+    val name: String = "",
+    val createdAt: Date = Date()
 )

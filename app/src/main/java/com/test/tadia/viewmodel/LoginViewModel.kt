@@ -2,9 +2,8 @@ package com.test.tadia.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.test.tadia.data.AppDatabase
 import com.test.tadia.data.User
-import com.test.tadia.repository.UserRepository
+import com.test.tadia.repository.FirebaseUserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +16,7 @@ data class LoginUiState(
     val currentUser: User? = null
 )
 
-class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
+class LoginViewModel(private val userRepository: FirebaseUserRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
