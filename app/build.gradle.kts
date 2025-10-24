@@ -65,6 +65,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
     
     // ViewModel and LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
@@ -75,6 +76,9 @@ dependencies {
     
     // Password hashing
     implementation("org.mindrot:jbcrypt:0.4")
+    
+    // Image handling
+    implementation("io.coil-kt:coil-compose:2.4.0")
     
     
     testImplementation(libs.junit)

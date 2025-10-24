@@ -26,7 +26,8 @@ import com.test.tadia.data.User
 fun HomeScreen(
     user: User,
     onLogout: () -> Unit,
-    onNavigateToReservations: () -> Unit
+    onNavigateToReservations: () -> Unit,
+    onNavigateToNews: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(BottomTab.Home) }
 
@@ -96,7 +97,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
                     title = "Crea tu noticia",
-                    onClick = { /* TODO: navigate */ }
+                    onClick = onNavigateToNews
                 )
             }
 
@@ -147,7 +148,8 @@ private fun HomeScreenPreview() {
                 name = "Test User"
             ),
             onLogout = {},
-            onNavigateToReservations = {}
+            onNavigateToReservations = {},
+            onNavigateToNews = {}
         )
     }
 }
