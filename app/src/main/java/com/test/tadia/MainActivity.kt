@@ -15,6 +15,7 @@ import com.google.firebase.FirebaseApp
 import com.test.tadia.data.User
 import com.test.tadia.data.Room
 import com.test.tadia.data.Reservation
+import com.test.tadia.data.News
 import com.test.tadia.data.getDate
 import com.test.tadia.data.getStartTime
 import com.test.tadia.data.getEndTime
@@ -23,6 +24,7 @@ import com.test.tadia.ui.theme.TadIATheme
 import com.test.tadia.viewmodel.LoginViewModel
 import com.test.tadia.viewmodel.RegisterViewModel
 import com.test.tadia.viewmodel.ReservationViewModel
+import com.test.tadia.viewmodel.NewsViewModel
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
@@ -52,13 +54,21 @@ fun TadIAApp() {
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var isUpdatingReservation by remember { mutableStateOf(false) }
     
+    // News flow state
+    var selectedNews by remember { mutableStateOf<News?>(null) }
+    var showNewsDeleteConfirmation by remember { mutableStateOf(false) }
+    var isUpdatingNews by remember { mutableStateOf(false) }
+    
     val application = LocalContext.current.applicationContext as TadIAApplication
     val userRepository = application.userRepository
     val reservationRepository = application.reservationRepository
+    val newsRepository = application.newsRepository
     val reservationViewModel: ReservationViewModel = viewModel { ReservationViewModel(reservationRepository) }
+    val newsViewModel: NewsViewModel = viewModel { NewsViewModel(newsRepository) }
     
     // Collect UI state at the top level
     val reservationUiState by reservationViewModel.uiState.collectAsState()
+    val newsUiState by newsViewModel.uiState.collectAsState()
     
     // Watch for successful reservation operations
     LaunchedEffect(reservationUiState.operationSuccessful, currentScreen) {
@@ -70,6 +80,26 @@ fun TadIAApp() {
             selectedReservation = null
             isUpdatingReservation = false
             currentScreen = "calendar"
+        }
+    }
+    
+    // Watch for successful news operations
+    LaunchedEffect(newsUiState.operationSuccessful, currentScreen) {
+        if (currentScreen == "news_form" && newsUiState.operationSuccessful) {
+            println("DEBUG: News operation successful, navigating back to news list")
+            // Clear the success flag
+            newsViewModel.clearSuccessFlag()
+            // Navigate back to news list
+            selectedNews = null
+            isUpdatingNews = false
+            currentScreen = "news_list"
+        }
+    }
+    
+    // Load news when entering news list
+    LaunchedEffect(currentScreen) {
+        if (currentScreen == "news_list") {
+            newsViewModel.loadAllNews()
         }
     }
     
@@ -97,6 +127,7 @@ fun TadIAApp() {
                     currentUser = loginUiState.currentUser
                     currentUser?.let { user ->
                         reservationViewModel.setCurrentUser(user.email)
+                        newsViewModel.setCurrentUser(user.email)
                     }
                     currentScreen = "home"
                 }
@@ -138,6 +169,9 @@ fun TadIAApp() {
                     },
                     onNavigateToReservations = {
                         currentScreen = "room_selection"
+                    },
+                    onNavigateToNews = {
+                        currentScreen = "news_list"
                     }
                 )
             }
@@ -262,6 +296,85 @@ fun TadIAApp() {
                 )
             }
         }
+        "news_list" -> {
+            currentUser?.let { user ->
+                NewsListScreen(
+                    news = newsUiState.news,
+                    isLoading = newsUiState.isLoading,
+                    errorMessage = newsUiState.errorMessage,
+                    currentUserEmail = user.email,
+                    onNewsSelected = { news ->
+                        selectedNews = news
+                        currentScreen = "news_detail"
+                    },
+                    onCreateNews = {
+                        selectedNews = null
+                        currentScreen = "news_form"
+                    },
+                    onEditNews = { news ->
+                        selectedNews = news
+                        currentScreen = "news_form"
+                    },
+                    onDeleteNews = { news ->
+                        newsViewModel.deleteNews(news.id)
+                    },
+                    onBack = {
+                        currentScreen = "home"
+                    }
+                )
+            }
+        }
+        "news_detail" -> {
+            selectedNews?.let { news ->
+                currentUser?.let { user ->
+                    NewsDetailScreen(
+                        news = news,
+                        currentUserEmail = user.email,
+                        onEditNews = {
+                            currentScreen = "news_form"
+                        },
+                        onDeleteNews = {
+                            showNewsDeleteConfirmation = true
+                        },
+                        onBack = {
+                            selectedNews = null
+                            currentScreen = "news_list"
+                        }
+                    )
+                }
+            }
+        }
+        "news_form" -> {
+            NewsFormScreen(
+                news = selectedNews,
+                isLoading = newsUiState.isLoading,
+                errorMessage = newsUiState.errorMessage,
+                onSaveNews = { newsToSave ->
+                    if (selectedNews == null) {
+                        // Creating new news
+                        newsViewModel.createNews(
+                            title = newsToSave.title,
+                            description = newsToSave.description,
+                            summary = newsToSave.summary,
+                            imageUrl = newsToSave.imageUrl,
+                            type = newsToSave.type,
+                            keywords = newsToSave.keywords,
+                            authorName = currentUser?.name ?: "Usuario",
+                            isPublished = newsToSave.isPublished
+                        )
+                    } else {
+                        // Updating existing news
+                        isUpdatingNews = true
+                        newsViewModel.updateNews(newsToSave)
+                    }
+                },
+                onBack = {
+                    newsViewModel.clearErrorMessage()
+                    isUpdatingNews = false
+                    currentScreen = if (selectedNews == null) "news_list" else "news_detail"
+                }
+            )
+        }
     }
     
     // Delete confirmation dialog
@@ -285,6 +398,34 @@ fun TadIAApp() {
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
+    // News Delete Confirmation Dialog
+    if (showNewsDeleteConfirmation && selectedNews != null) {
+        AlertDialog(
+            onDismissRequest = { showNewsDeleteConfirmation = false },
+            title = { Text("Confirmar eliminación") },
+            text = { 
+                Text("¿Seguro que deseas eliminar la noticia \"${selectedNews!!.title}\"?") 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        newsViewModel.deleteNews(selectedNews!!.id)
+                        selectedNews = null
+                        showNewsDeleteConfirmation = false
+                        currentScreen = "news_list"
+                    }
+                ) {
+                    Text("Eliminar", color = Color(0xFFD32F2F))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewsDeleteConfirmation = false }) {
                     Text("Cancelar")
                 }
             }
