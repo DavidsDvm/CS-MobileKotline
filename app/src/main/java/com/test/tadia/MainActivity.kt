@@ -172,6 +172,9 @@ fun TadIAApp() {
                     },
                     onNavigateToNews = {
                         currentScreen = "news_list"
+                    },
+                    onNavigateToChat = {
+                        currentScreen = "chat"
                     }
                 )
             }
@@ -374,6 +377,17 @@ fun TadIAApp() {
                     currentScreen = if (selectedNews == null) "news_list" else "news_detail"
                 }
             )
+        }
+        "chat" -> {
+            currentUser?.let { user ->
+                ChatScreen(
+                    currentUserEmail = user.email,
+                    chatId = null, // Always start fresh, drawer handles loading chats
+                    onBack = {
+                        currentScreen = "home"
+                    }
+                )
+            }
         }
     }
     

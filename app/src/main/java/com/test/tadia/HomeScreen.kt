@@ -27,7 +27,8 @@ fun HomeScreen(
     user: User,
     onLogout: () -> Unit,
     onNavigateToReservations: () -> Unit,
-    onNavigateToNews: () -> Unit
+    onNavigateToNews: () -> Unit,
+    onNavigateToChat: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(BottomTab.Home) }
 
@@ -92,7 +93,7 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
                     title = "TadIA- Chat con\nInteligencia artificial",
-                    onClick = { /* TODO: navigate */ }
+                    onClick = onNavigateToChat
                 )
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
@@ -149,7 +150,8 @@ private fun HomeScreenPreview() {
             ),
             onLogout = {},
             onNavigateToReservations = {},
-            onNavigateToNews = {}
+            onNavigateToNews = {},
+            onNavigateToChat = {}
         )
     }
 }
