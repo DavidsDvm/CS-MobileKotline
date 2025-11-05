@@ -109,11 +109,11 @@ fun TadIAApp() {
         }
     }
     
-    val shouldShowBottomBar = currentScreen !in listOf("login", "register")
+    val mostrarBarraInferiorTodasPantallas = currentScreen !in listOf("login", "register")
 
     Scaffold(
         bottomBar = {
-            if (shouldShowBottomBar) {
+            if (mostrarBarraInferiorTodasPantallas) {
                 AppBottomBar(
                     selected = selectedBottomTab,
                     onSelected = { tab ->
@@ -422,7 +422,7 @@ fun TadIAApp() {
             currentUser?.let { user ->
                 ChatScreen(
                     currentUserEmail = user.email,
-                    chatId = null, // Always start fresh, drawer handles loading chats
+                    chatId = null,
                     onBack = {
                         currentScreen = "home"
                         selectedBottomTab = BottomTab.Home
@@ -435,24 +435,23 @@ fun TadIAApp() {
                 val coroutineScope = rememberCoroutineScope()
                 ProfileScreen(
                     user = user,
-                    onBack = {
+                    paraVolver = {
                         currentScreen = "home"
                         selectedBottomTab = BottomTab.Home
                     },
-                    onLogout = {
+                    paraCerrarSesion = {
                         coroutineScope.launch {
                             userRepository.logout()
                             currentUser = null
-                            // bump login VM key to force a fresh LoginViewModel with clean state
                             loginVmKey += 1
                             currentScreen = "login"
                             selectedBottomTab = BottomTab.Home
                         }
                     },
-                    onUpdateProfile = { newName ->
+                    paraActualizarNombreUsuario = { newName ->
                         currentUser = user.copy(name = newName)
                     },
-                    onChangePassword = { currentPwd, newPwd ->
+                    paraActualizarPassword = { currentPwd, newPwd ->
                         coroutineScope.launch {
                             val result = userRepository.updatePassword(currentPwd, newPwd)
                             result.onSuccess { println("Password updated") }

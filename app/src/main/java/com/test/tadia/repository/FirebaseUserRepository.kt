@@ -1,6 +1,7 @@
 package com.test.tadia.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.test.tadia.data.User
 import kotlinx.coroutines.flow.Flow
@@ -91,4 +92,17 @@ class FirebaseUserRepository {
     fun getCurrentUserEmail(): String? {
         return auth.currentUser?.email
     }
+
+    suspend fun updatePassword(actualPassword: String, nuevaPassword: String): Result<Unit> {
+        return try {
+            val currentEmail = auth.currentUser?.email ?: return Result.failure(Exception("No user logged in"))
+            val credential = EmailAuthProvider.getCredential(currentEmail, actualPassword)
+            auth.currentUser?.reauthenticate(credential)?.await()
+            auth.currentUser?.updatePassword(nuevaPassword)?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }

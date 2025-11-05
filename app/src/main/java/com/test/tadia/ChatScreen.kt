@@ -108,7 +108,18 @@ fun ChatScreen(
                     }
                 },
                 onDeleteChat = { chatIdToDelete ->
-                    historyViewModel.deleteChat(chatIdToDelete)
+                    scope.launch {
+                        // Eliminar el historial gente
+                        historyViewModel.deleteChat(chatIdToDelete)
+                        // Esto fixea los chats si estoy en el chat, si estoy en el chat que
+                        // elimine se reestablece la interfaz de inicio - Giovanny
+                        if (viewModel.uiState.value.chatHistoryId == chatIdToDelete) {
+                            viewModel.startNewChat(currentUserEmail)
+                        }
+
+                        historyViewModel.loadChats(currentUserEmail)
+                        drawerState.close()
+                    }
                 },
                 onRefresh = {
                     println("ChatScreen: Manual refresh triggered")

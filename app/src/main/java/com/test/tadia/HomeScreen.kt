@@ -68,9 +68,13 @@ fun HomeScreen(
 
             Spacer(Modifier.height(24.dp))
 
+            // Quité esta opción porque la agregupe en
+            // la pestaña de perfil - Giovanny 20251029
+            /*
             TextButton(onClick = onLogout) {
                 Text("Cerrar sesión")
             }
+            */
 
             // Menu cards
             Column(
@@ -90,7 +94,7 @@ fun HomeScreen(
                 )
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
-                    title = "Crea tu noticia",
+                    title = "Noticias",
                     onClick = onNavigateToNews
                 )
             }
