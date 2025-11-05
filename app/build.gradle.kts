@@ -80,6 +80,8 @@ dependencies {
     // Image handling
     implementation("io.coil-kt:coil-compose:2.4.0")
     
+    // Gemini AI
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.2")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

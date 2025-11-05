@@ -3,14 +3,18 @@ package com.test.tadia
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.google.firebase.FirebaseApp
 import com.test.tadia.data.User
 import com.test.tadia.data.Room
@@ -46,6 +50,8 @@ class MainActivity : ComponentActivity() {
 fun TadIAApp() {
     var currentScreen by remember { mutableStateOf("login") }
     var currentUser by remember { mutableStateOf<User?>(null) }
+    var selectedBottomTab by remember { mutableStateOf(BottomTab.Home) }
+    var loginVmKey by remember { mutableStateOf(0) }
     
     // Reservation flow state
     var selectedRoom by remember { mutableStateOf<Room?>(null) }
@@ -103,9 +109,31 @@ fun TadIAApp() {
         }
     }
     
-    when (currentScreen) {
+    val mostrarBarraInferiorTodasPantallas = currentScreen !in listOf("login", "register")
+
+    Scaffold(
+        bottomBar = {
+            if (mostrarBarraInferiorTodasPantallas) {
+                AppBottomBar(
+                    selected = selectedBottomTab,
+                    onSelected = { tab ->
+                        selectedBottomTab = tab
+                        when (tab) {
+                            BottomTab.Home -> currentScreen = "home"
+                            BottomTab.Calendar -> currentScreen = if (selectedRoom == null) "room_selection" else "calendar"
+                            BottomTab.Inbox -> currentScreen = "chat"
+                            BottomTab.Favorites -> currentScreen = "news_list"
+                            BottomTab.Profile -> currentScreen = "profile"
+                        }
+                    }
+                )
+            }
+        }
+    ) { padding ->
+        androidx.compose.foundation.layout.Box(modifier = androidx.compose.ui.Modifier.padding(padding)) {
+            when (currentScreen) {
         "login" -> {
-            val loginViewModel: LoginViewModel = viewModel {
+            val loginViewModel: LoginViewModel = viewModel(key = "login_$loginVmKey") {
                 LoginViewModel(userRepository)
             }
             
@@ -130,6 +158,7 @@ fun TadIAApp() {
                         newsViewModel.setCurrentUser(user.email)
                     }
                     currentScreen = "home"
+                    selectedBottomTab = BottomTab.Home
                 }
             }
         }
@@ -169,9 +198,15 @@ fun TadIAApp() {
                     },
                     onNavigateToReservations = {
                         currentScreen = "room_selection"
+                        selectedBottomTab = BottomTab.Calendar
                     },
                     onNavigateToNews = {
                         currentScreen = "news_list"
+                        selectedBottomTab = BottomTab.Favorites
+                    },
+                    onNavigateToChat = {
+                        currentScreen = "chat"
+                        selectedBottomTab = BottomTab.Inbox
                     }
                 )
             }
@@ -182,9 +217,11 @@ fun TadIAApp() {
                     selectedRoom = room
                     reservationViewModel.selectRoom(room)
                     currentScreen = "calendar"
+                    selectedBottomTab = BottomTab.Calendar
                 },
                 onBack = {
                     currentScreen = "home"
+                    selectedBottomTab = BottomTab.Home
                 }
             )
         }
@@ -208,6 +245,7 @@ fun TadIAApp() {
                     },
                     onBack = {
                         currentScreen = "room_selection"
+                        selectedBottomTab = BottomTab.Calendar
                     }
                 )
             }
@@ -252,6 +290,7 @@ fun TadIAApp() {
                         selectedReservation = null
                         reservationViewModel.clearErrorMessage()
                         currentScreen = "calendar"
+                        selectedBottomTab = BottomTab.Calendar
                     }
                     )
                 }
@@ -292,6 +331,7 @@ fun TadIAApp() {
                         reservationViewModel.clearErrorMessage()
                         isUpdatingReservation = false
                         currentScreen = if (selectedReservation == null) "calendar" else "reservation_details"
+                        selectedBottomTab = BottomTab.Calendar
                     }
                 )
             }
@@ -320,6 +360,7 @@ fun TadIAApp() {
                     },
                     onBack = {
                         currentScreen = "home"
+                        selectedBottomTab = BottomTab.Home
                     }
                 )
             }
@@ -339,6 +380,7 @@ fun TadIAApp() {
                         onBack = {
                             selectedNews = null
                             currentScreen = "news_list"
+                            selectedBottomTab = BottomTab.Favorites
                         }
                     )
                 }
@@ -372,8 +414,54 @@ fun TadIAApp() {
                     newsViewModel.clearErrorMessage()
                     isUpdatingNews = false
                     currentScreen = if (selectedNews == null) "news_list" else "news_detail"
+                    selectedBottomTab = BottomTab.Favorites
                 }
             )
+        }
+        "chat" -> {
+            currentUser?.let { user ->
+                ChatScreen(
+                    currentUserEmail = user.email,
+                    chatId = null,
+                    onBack = {
+                        currentScreen = "home"
+                        selectedBottomTab = BottomTab.Home
+                    }
+                )
+            }
+        }
+        "profile" -> {
+            currentUser?.let { user ->
+                val coroutineScope = rememberCoroutineScope()
+                ProfileScreen(
+                    user = user,
+                    paraVolver = {
+                        currentScreen = "home"
+                        selectedBottomTab = BottomTab.Home
+                    },
+                    paraCerrarSesion = {
+                        coroutineScope.launch {
+                            userRepository.logout()
+                            currentUser = null
+                            loginVmKey += 1
+                            currentScreen = "login"
+                            selectedBottomTab = BottomTab.Home
+                        }
+                    },
+                    paraActualizarNombreUsuario = { newName ->
+                        currentUser = user.copy(name = newName)
+                    },
+                    paraActualizarPassword = { currentPwd, newPwd ->
+                        coroutineScope.launch {
+                            val result = userRepository.updatePassword(currentPwd, newPwd)
+                            result.onSuccess { println("Password updated") }
+                                .onFailure { e -> println("Password update failed: ${e.message}") }
+                        }
+                    }
+                )
+            }
+        }
+            }
         }
     }
     

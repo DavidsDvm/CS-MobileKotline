@@ -27,24 +27,14 @@ fun HomeScreen(
     user: User,
     onLogout: () -> Unit,
     onNavigateToReservations: () -> Unit,
-    onNavigateToNews: () -> Unit
+    onNavigateToNews: () -> Unit,
+    onNavigateToChat: () -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(BottomTab.Home) }
-
-    Scaffold(
-        bottomBar = {
-            AppBottomBar(
-                selected = selectedTab,
-                onSelected = { selectedTab = it }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
             // Header image (Dog)
             Box(
                 modifier = Modifier
@@ -65,7 +55,7 @@ fun HomeScreen(
 
             // Welcome title
             Text(
-                text = "Bienvenido a TadIA",
+                text = "Bienvenido a TadIA, ${user.name}",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
@@ -77,6 +67,14 @@ fun HomeScreen(
             )
 
             Spacer(Modifier.height(24.dp))
+
+            // Quité esta opción porque la agregupe en
+            // la pestaña de perfil - Giovanny 20251029
+            /*
+            TextButton(onClick = onLogout) {
+                Text("Cerrar sesión")
+            }
+            */
 
             // Menu cards
             Column(
@@ -92,18 +90,17 @@ fun HomeScreen(
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
                     title = "TadIA- Chat con\nInteligencia artificial",
-                    onClick = { /* TODO: navigate */ }
+                    onClick = onNavigateToChat
                 )
                 Spacer(Modifier.height(24.dp))
                 MenuCard(
-                    title = "Crea tu noticia",
+                    title = "Noticias",
                     onClick = onNavigateToNews
                 )
             }
 
             Spacer(Modifier.height(32.dp))
         }
-    }
 }
 
 @Composable
@@ -149,7 +146,8 @@ private fun HomeScreenPreview() {
             ),
             onLogout = {},
             onNavigateToReservations = {},
-            onNavigateToNews = {}
+            onNavigateToNews = {},
+            onNavigateToChat = {}
         )
     }
 }
