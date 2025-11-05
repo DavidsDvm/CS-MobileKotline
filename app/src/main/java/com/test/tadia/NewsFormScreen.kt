@@ -88,7 +88,7 @@ fun NewsFormScreen(
         TopAppBar(
             title = { 
                 Text(
-                    "CREA TU NOTICIA",
+                    "NOTICIAS",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold
                     )

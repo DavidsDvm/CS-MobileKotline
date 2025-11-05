@@ -31,13 +31,13 @@ fun AppBottomBar(
             selected = selected == BottomTab.Inbox,
             onClick = { onSelected(BottomTab.Inbox) },
             icon = { Icon(Icons.Default.Email, contentDescription = "Mensajes") },
-            label = { Text("Mensajes") }
+            label = { Text("TadIA") }
         )
         NavigationBarItem(
             selected = selected == BottomTab.Favorites,
             onClick = { onSelected(BottomTab.Favorites) },
-            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favoritos") },
-            label = { Text("Favoritos") }
+            icon = { Icon(Icons.Default.Favorite, contentDescription = "Noticias") },
+            label = { Text("Noticias") }
         )
         NavigationBarItem(
             selected = selected == BottomTab.Profile,
